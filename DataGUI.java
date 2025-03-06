@@ -1,12 +1,18 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.Dictionary;
+import java.util.Enumeration;
 
 
 public class DataGUI extends JFrame {
     private JTextField inputField;
     private JTextArea resultsArea;
+    private World world;
+    private Bird[] currentSearch;
+    private String lastQuery;
     
     public DataGUI() {
+        world = new World("data/names.txt", "data/color.txt", "data/diets.txt", "data/status.txt");
         setTitle("Bird Data Analyzer");
         setSize(500, 400);
         setLayout(new FlowLayout());
@@ -16,10 +22,13 @@ public class DataGUI extends JFrame {
         JButton analyzeColorButton = new JButton("Analyze by Color");
         JButton analyzeDietButton = new JButton("Analyze by Diet");
         JButton analyzeStatusButton = new JButton("Analyze by Status");
-        JButton commonColorButton = new JButton("Count with Color");
-        JButton commonDietButton = new JButton("Count with Diet");
-        JButton commonStatusButton = new JButton("Count with Status");
+        JButton commonColorButton = new JButton("Find Most Common Color");
+        JButton commonDietButton = new JButton("Find Most Common Diet");
+        JButton commonStatusButton = new JButton("Find Most Common Status");
         JButton statusPercentageButton = new JButton("Status Percentage");
+        JButton countByColorButton = new JButton("Count by Color");
+        JButton countByDietButton = new JButton("Count by Diet");
+        JButton countByStatusButton = new JButton("Count by Status");
         resultsArea = new JTextArea(10, 40);
         resultsArea.setEditable(false);
 
@@ -31,6 +40,9 @@ public class DataGUI extends JFrame {
         add(commonDietButton);
         add(commonStatusButton);
         add(statusPercentageButton);
+        add(countByColorButton);
+        add(countByDietButton);
+        add(countByStatusButton);
         add(new JScrollPane(resultsArea));
 
         analyzeColorButton.addActionListener(e -> analyzeByColor());
@@ -40,54 +52,86 @@ public class DataGUI extends JFrame {
         commonDietButton.addActionListener(e -> getMostCommonDiet());
         commonStatusButton.addActionListener(e -> getMostCommonStatus());
         statusPercentageButton.addActionListener(e -> getStatusPercentage());
+        countByColorButton.addActionListener(e -> countByColor());
+        countByDietButton.addActionListener(e -> countByDiet());
+        countByStatusButton.addActionListener(e -> countByStatus());
     }
 
-    private static String stringify(String[] arr) {
+    private static String stringify(Bird[] arr) {
         String result = "";
-        for(String s : arr) {
+        for(Bird s : arr) {
             result += s + "\n";
         }
         return result;
     }
 
-    private void analyzeByColor(){
-        String[] birds = DataAnalyzer.birdsWithColor(inputField.getText());
+    private static String stringify(Dictionary<String, Bird[]> dict) {
+        String result = "";
+        Enumeration<String> keys = dict.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            result += key + ": " + dict.get(key).length + "\n";
+        }
+        return result;
+    }
 
+    private void analyzeByColor(){
+        Bird[] birds = world.searchByColor(inputField.getText());
+        currentSearch = birds;
+        lastQuery = "Birds with color " + inputField.getText();
         resultsArea.setText("Birds with color " + inputField.getText() + ": \n" + stringify(birds) + "\n");
     }
 
     private void analyzeByDiet(){
-        String[] birds = DataAnalyzer.birdsWithDiet(inputField.getText());
+        Bird[] birds = world.searchByDiet(inputField.getText());
+        currentSearch = birds;
+        lastQuery = "Birds with diet " + inputField.getText();
         resultsArea.setText("Birds with diet " + inputField.getText() + ": \n" + stringify(birds) + "\n");
     }
 
     private void analyzeByStatus(){
-        String[] birds = DataAnalyzer.birdsWithStatus(inputField.getText());
+        Bird[] birds = world.searchByStatus(inputField.getText());
+        currentSearch = birds;
+        lastQuery = "Birds with status " + inputField.getText();
         resultsArea.setText("Birds with status " + inputField.getText() + ": \n" + stringify(birds) + "\n");
     }
 
     private void getMostCommonColor(){
-        int count = DataAnalyzer.countWithColor(inputField.getText());
-        resultsArea.setText("Number of birds with color " + inputField.getText() + ": " + count);
+        String count = world.getMostCommonColor();
+        resultsArea.setText("Most common color: " + count);
     }
 
     private void getMostCommonDiet(){
-        int count = DataAnalyzer.countWithDiet(inputField.getText());
-        resultsArea.setText("Number of birds with diet " + inputField.getText() + ": " + count);
+        String count = world.getMostCommonDiet();
+        resultsArea.setText("Most common diet "+ ": " + count);
     }
 
     private void getMostCommonStatus(){
-        int count = DataAnalyzer.countWithStatus(inputField.getText());
-        resultsArea.setText("Number of birds with status " + inputField.getText() + ": " + count);
+        String count = world.getMostCommonStatus();
+        resultsArea.setText("Most common status "+ ": " + count);
     }
 
     private void getStatusPercentage(){
-        double percentage = DataAnalyzer.statusPercentage(inputField.getText());
-        resultsArea.setText("Percentage of birds with status " + inputField.getText() + ": " + percentage + "%");
+        // double percentage = DataAnalyzer.statusPercentage();
+        resultsArea.setText("Percentage of birds with status "+ ": " + "percentage" + "%");
+    }
+
+    private void countByColor(){
+        Dictionary<String, Bird[]> result = world.countByColor(currentSearch);
+        resultsArea.setText(lastQuery + " counted by color: \n" + stringify(result) + "\n");
+    }
+
+    private void countByDiet(){
+        Dictionary<String, Bird[]> result = world.countByDiet(currentSearch);
+        resultsArea.setText(lastQuery + " counted by diet: \n" + stringify(result) + "\n");
+    }
+
+    private void countByStatus(){
+        Dictionary<String, Bird[]> result = world.countByStatus(currentSearch);
+        resultsArea.setText(lastQuery + " counted by status: \n" + stringify(result) + "\n");
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new DataGUI().setVisible(true));
     }
 }
-    
